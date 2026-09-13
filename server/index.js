@@ -3,6 +3,9 @@ import cors from "cors";
 import testCasesRouter from "./test-cases.js";
 import testSuitesRouter from "./test-suites.js";
 import bugsRouter from "./bugs.js";
+import testRunsRouter from "./test-runs.js";
+import dashboardRouter from "./routes/dashboard.js";
+import reportsRouter from "./reports.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +27,9 @@ app.get("/api/health", (req, res) => {
 app.use("/api/test-cases", testCasesRouter);
 app.use("/api/test-suites", testSuitesRouter);
 app.use("/api/bugs", bugsRouter);
+app.use("/api/test-runs", testRunsRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/reports", reportsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);

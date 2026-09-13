@@ -66,6 +66,45 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_bug_activity_bug ON bug_activity(bug_id);
+
+  CREATE TABLE IF NOT EXISTS test_runs_v2 (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    suite_id INTEGER REFERENCES test_suites(id) ON DELETE SET NULL,
+    status TEXT NOT NULL CHECK (status IN ('in-progress', 'completed')) DEFAULT 'in-progress',
+    pass_count INTEGER NOT NULL DEFAULT 0,
+    fail_count INTEGER NOT NULL DEFAULT 0,
+    skip_count INTEGER NOT NULL DEFAULT 0,
+    start_time TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    end_time TEXT,
+    created_by TEXT
+  );
+
+  CREATE TABLE IF NOT EXISTS test_run_results (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER NOT NULL REFERENCES test_runs_v2(id) ON DELETE CASCADE,
+    test_case_id INTEGER NOT NULL REFERENCES test_cases(id),
+    result TEXT NOT NULL CHECK (result IN ('pending', 'passed', 'failed', 'skipped')) DEFAULT 'pending',
+    duration_ms INTEGER,
+    notes TEXT,
+    failed_at TEXT,
+    discord_alert_sent_at TEXT,
+    sort_order INTEGER NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_test_run_results_run ON test_run_results(run_id);
+
+  CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    run_id INTEGER REFERENCES test_runs_v2(id) ON DELETE SET NULL,
+    suite_name TEXT NOT NULL,
+    run_date TEXT NOT NULL,
+    total_count INTEGER NOT NULL,
+    passed_count INTEGER NOT NULL,
+    failed_count INTEGER NOT NULL,
+    skipped_count INTEGER NOT NULL,
+    results TEXT NOT NULL,
+    generated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  );
 `);
 
 db.pragma("foreign_keys = ON");
@@ -313,6 +352,128 @@ if (bugSeedCount === 0) {
   });
 
   insertBugs(bugSeedData);
+}
+
+const runSeedCount = db.prepare("SELECT COUNT(*) AS count FROM test_runs_v2").get().count;
+
+if (runSeedCount === 0) {
+  const loginSuite = db.prepare("SELECT id FROM test_suites WHERE name = ?").get("Login Regression Suite");
+
+  if (loginSuite) {
+    const suiteCases = db
+      .prepare(`
+        SELECT tc.id, tc.title
+        FROM suite_test_cases stc
+        JOIN test_cases tc ON tc.id = stc.test_case_id
+        WHERE stc.suite_id = ?
+        ORDER BY stc.sort_order ASC
+      `)
+      .all(loginSuite.id);
+
+    const resultByTitle = {
+      "Successful login with valid credentials": {
+        result: "passed",
+        duration_ms: 820,
+        notes: null,
+        failed_at: null,
+        discord_alert_sent_at: null,
+      },
+      "Login fails with incorrect password": {
+        result: "failed",
+        duration_ms: 640,
+        notes: "Error message does not appear; the page just reloads silently instead.",
+        failed_at: "2026-09-05T10:15:00.000Z",
+        discord_alert_sent_at: "2026-09-05T10:15:01.000Z",
+      },
+      "Password reset request with a registered email": {
+        result: "skipped",
+        duration_ms: null,
+        notes: "Skipped: email service is not configured in this environment.",
+        failed_at: null,
+        discord_alert_sent_at: null,
+      },
+    };
+
+    const insertRun = db.prepare(`
+      INSERT INTO test_runs_v2 (suite_id, status, pass_count, fail_count, skip_count, start_time, end_time, created_by)
+      VALUES (@suite_id, 'completed', 1, 1, 1, @start_time, @end_time, @created_by)
+    `);
+
+    const insertResult = db.prepare(`
+      INSERT INTO test_run_results
+        (run_id, test_case_id, result, duration_ms, notes, failed_at, discord_alert_sent_at, sort_order)
+      VALUES (@run_id, @test_case_id, @result, @duration_ms, @notes, @failed_at, @discord_alert_sent_at, @sort_order)
+    `);
+
+    const insertRunAndResults = db.transaction(() => {
+      const runResult = insertRun.run({
+        suite_id: loginSuite.id,
+        start_time: "2026-09-05T10:00:00.000Z",
+        end_time: "2026-09-05T10:20:00.000Z",
+        created_by: "agata",
+      });
+      const runId = runResult.lastInsertRowid;
+
+      suiteCases.forEach((tc, index) => {
+        const seed = resultByTitle[tc.title];
+        if (!seed) return;
+        insertResult.run({
+          run_id: runId,
+          test_case_id: tc.id,
+          result: seed.result,
+          duration_ms: seed.duration_ms,
+          notes: seed.notes,
+          failed_at: seed.failed_at,
+          discord_alert_sent_at: seed.discord_alert_sent_at,
+          sort_order: index,
+        });
+      });
+    });
+
+    insertRunAndResults();
+  }
+}
+
+const reportSeedCount = db.prepare("SELECT COUNT(*) AS count FROM reports").get().count;
+
+if (reportSeedCount === 0) {
+  const sourceRun = db
+    .prepare(`
+      SELECT tr.*, ts.name AS suite_name
+      FROM test_runs_v2 tr
+      LEFT JOIN test_suites ts ON ts.id = tr.suite_id
+      ORDER BY tr.start_time ASC
+      LIMIT 1
+    `)
+    .get();
+
+  if (sourceRun) {
+    const results = db
+      .prepare(`
+        SELECT r.test_case_id, r.result, r.duration_ms, r.notes, tc.title, tc.severity, tc.test_type
+        FROM test_run_results r
+        JOIN test_cases tc ON tc.id = r.test_case_id
+        WHERE r.run_id = ?
+        ORDER BY r.sort_order ASC
+      `)
+      .all(sourceRun.id);
+
+    db.prepare(`
+      INSERT INTO reports
+        (run_id, suite_name, run_date, total_count, passed_count, failed_count, skipped_count, results, generated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      sourceRun.id,
+      sourceRun.suite_name || "(deleted suite)",
+      sourceRun.start_time,
+      results.length,
+      sourceRun.pass_count,
+      sourceRun.fail_count,
+      sourceRun.skip_count,
+      JSON.stringify(results),
+      sourceRun.end_time || sourceRun.start_time
+    );
+  }
 }
 
 export default db;

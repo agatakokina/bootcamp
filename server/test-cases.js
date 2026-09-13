@@ -219,7 +219,8 @@ router.post("/:id/restore", handleRestoreTestCase);
 router.use((req, res) => fail(res, 404, "Not found."));
 
 router.use((err, req, res, next) => {
-  fail(res, 500, err.message || "Unexpected server error.");
+  console.error(err);
+  fail(res, 500, "Unexpected server error.");
 });
 
 export default router;

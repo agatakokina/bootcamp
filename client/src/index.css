@@ -49,6 +49,22 @@ body {
   background: #f3f4f6;
 }
 
+.page-header-actions .secondary-button-link {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.page-header-actions .secondary-button-link:hover {
+  background: #f3f4f6;
+}
+
 .page-header button,
 .modal-actions button[type="submit"] {
   background: #2563eb;
@@ -209,6 +225,128 @@ body {
   margin: 0.3rem 0 0;
   font-size: 0.9rem;
   color: #374151;
+}
+
+.table input[type="text"] {
+  width: 100%;
+  min-width: 10rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  min-height: 5.5rem;
+}
+
+.metric-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.metric-label {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.metric-hint {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #2563eb;
+}
+
+.metric-hint-positive {
+  color: #166534;
+  font-weight: 600;
+}
+
+.empty-state-card {
+  background: white;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.empty-state-title {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.empty-state-body {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton {
+  background: #e5e7eb;
+  border-radius: 8px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-block {
+  height: 10rem;
+  margin-bottom: 1rem;
+}
+
+.result-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.result-button {
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.result-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result-button.pass:hover:not(:disabled) {
+  background: #dcfce7;
+  border-color: #166534;
+}
+
+.result-button.fail:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #b91c1c;
+}
+
+.result-button.skip:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #1d4ed8;
 }
 
 .empty-cell {

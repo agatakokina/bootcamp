@@ -9,6 +9,7 @@ import {
   updateSuite,
 } from "../api/test-suites.js";
 import { fetchTestCases } from "../api/test-cases.js";
+import { createRun } from "../api/test-runs.js";
 import SeverityBadge from "../components/SeverityBadge.jsx";
 import TestTypeBadge from "../components/TestTypeBadge.jsx";
 import SuiteStatusBadge from "../components/SuiteStatusBadge.jsx";
@@ -28,6 +29,7 @@ function TestSuiteDetailPage() {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [showDeleteSuite, setShowDeleteSuite] = useState(false);
   const [removeTarget, setRemoveTarget] = useState(null);
+  const [startingRun, setStartingRun] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -82,6 +84,18 @@ function TestSuiteDetailPage() {
     navigate("/test-suites");
   }
 
+  async function handleNewRun() {
+    setStartingRun(true);
+    setError(null);
+    try {
+      const run = await createRun(id);
+      navigate(`/test-runs/${run.id}`);
+    } catch (err) {
+      setError(err.message);
+      setStartingRun(false);
+    }
+  }
+
   function handleDragStart(index) {
     setDraggedIndex(index);
   }
@@ -131,6 +145,9 @@ function TestSuiteDetailPage() {
               </option>
             ))}
           </select>
+          <button type="button" onClick={handleNewRun} disabled={cases.length === 0 || startingRun}>
+            {startingRun ? "Starting..." : "New Run"}
+          </button>
           <button type="button" className="danger-button" onClick={() => setShowDeleteSuite(true)}>
             Delete Suite
           </button>
