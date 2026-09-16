@@ -1,0 +1,12 @@
+services:
+  - name: bootcamp-app
+    type: web
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build -w client
+    startCommand: npm start -w server
+    envVars:
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
