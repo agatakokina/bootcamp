@@ -105,6 +105,17 @@ db.exec(`
     results TEXT NOT NULL,
     generated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
   );
+
+  CREATE TABLE IF NOT EXISTS user_preferences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    theme TEXT NOT NULL CHECK (theme IN ('light', 'dark', 'system')) DEFAULT 'system',
+    default_severity_for_new_bugs TEXT NOT NULL CHECK (default_severity_for_new_bugs IN ('critical', 'major', 'minor', 'trivial')) DEFAULT 'minor',
+    default_page_size INTEGER NOT NULL CHECK (default_page_size IN (10, 20, 50, 100)) DEFAULT 20,
+    timezone TEXT,
+    auto_generate_report_after_run INTEGER NOT NULL CHECK (auto_generate_report_after_run IN (0, 1)) DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+  );
 `);
 
 db.pragma("foreign_keys = ON");
@@ -474,6 +485,15 @@ if (reportSeedCount === 0) {
       sourceRun.end_time || sourceRun.start_time
     );
   }
+}
+
+const preferencesCount = db.prepare("SELECT COUNT(*) AS count FROM user_preferences").get().count;
+
+if (preferencesCount === 0) {
+  db.prepare(`
+    INSERT INTO user_preferences (theme, default_severity_for_new_bugs, default_page_size, timezone, auto_generate_report_after_run)
+    VALUES ('system', 'minor', 20, NULL, 1)
+  `).run();
 }
 
 export default db;

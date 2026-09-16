@@ -170,7 +170,7 @@ function BugDetailPage() {
           <p>No further status transitions are available.</p>
         ) : (
           <div className="add-case-row">
-            <select value={nextStatus} onChange={(e) => setNextStatus(e.target.value)}>
+            <select aria-label="Change bug status" value={nextStatus} onChange={(e) => setNextStatus(e.target.value)}>
               <option value="">Change status to...</option>
               {allowedNext.map((s) => (
                 <option key={s} value={s}>
@@ -180,6 +180,7 @@ function BugDetailPage() {
             </select>
             <input
               type="text"
+              aria-label="Status change note"
               placeholder="Optional note..."
               value={statusMessage}
               onChange={(e) => setStatusMessage(e.target.value)}
@@ -208,6 +209,7 @@ function BugDetailPage() {
         <div className="add-case-row">
           <input
             type="text"
+            aria-label="Add a comment"
             placeholder="Add a comment..."
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}

@@ -142,6 +142,7 @@ function TestRunDetailPage() {
               <td>
                 <input
                   type="text"
+                  aria-label={`Notes for ${r.title}`}
                   value={notesDraft[r.test_case_id] ?? ""}
                   onChange={(e) => setNotesDraft((prev) => ({ ...prev, [r.test_case_id]: e.target.value }))}
                   placeholder="Notes..."

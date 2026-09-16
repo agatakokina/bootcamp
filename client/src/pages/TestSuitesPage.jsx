@@ -50,7 +50,7 @@ function TestSuitesPage() {
       </div>
 
       <div className="toolbar">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select aria-label="Filter suites by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">All statuses</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>

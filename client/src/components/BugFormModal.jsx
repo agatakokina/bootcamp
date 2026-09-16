@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SEVERITIES, PRIORITIES } from "../constants/bugs.js";
 import { stripLeadingNumber } from "../utils/text.js";
 
-function BugFormModal({ bug, onClose, onSubmit }) {
+function BugFormModal({ bug, defaultSeverity, onClose, onSubmit }) {
+  const modalRef = useRef(null);
   const isEdit = Boolean(bug);
   const [title, setTitle] = useState(bug?.title ?? "");
   const [description, setDescription] = useState(bug?.description ?? "");
@@ -10,10 +11,14 @@ function BugFormModal({ bug, onClose, onSubmit }) {
   const [expected, setExpected] = useState(bug?.expected ?? "");
   const [actual, setActual] = useState(bug?.actual ?? "");
   const [environment, setEnvironment] = useState(bug?.environment ?? "");
-  const [severity, setSeverity] = useState(bug?.severity ?? "major");
+  const [severity, setSeverity] = useState(bug?.severity ?? defaultSeverity ?? "major");
   const [priority, setPriority] = useState(bug?.priority ?? "medium");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    modalRef.current?.focus();
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -49,8 +54,16 @@ function BugFormModal({ bug, onClose, onSubmit }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{isEdit ? "Edit Bug" : "New Bug"}</h2>
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="modal-title">{isEdit ? "Edit Bug" : "New Bug"}</h2>
         <form onSubmit={handleSubmit}>
           <label>
             Title *

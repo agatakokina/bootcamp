@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const STATUSES = ["draft", "ready", "in-progress", "passed", "failed"];
 
 function SuiteFormModal({ onClose, onSubmit }) {
+  const modalRef = useRef(null);
   const [name, setName] = useState("");
   const [feature, setFeature] = useState("");
   const [status, setStatus] = useState("draft");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    modalRef.current?.focus();
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -29,8 +34,16 @@ function SuiteFormModal({ onClose, onSubmit }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-small" onClick={(e) => e.stopPropagation()}>
-        <h2>New Test Suite</h2>
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="modal modal-small"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="modal-title">New Test Suite</h2>
         <form onSubmit={handleSubmit}>
           <label>
             Name *

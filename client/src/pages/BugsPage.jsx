@@ -8,6 +8,7 @@ import BugPriorityBadge from "../components/BugPriorityBadge.jsx";
 import BugFormModal from "../components/BugFormModal.jsx";
 import BugTrashModal from "../components/BugTrashModal.jsx";
 import Pagination from "../components/Pagination.jsx";
+import { useSettings } from "../context/SettingsContext.jsx";
 
 const PAGE_SIZE = 20;
 
@@ -22,6 +23,7 @@ function formatDate(iso) {
 }
 
 function BugsPage() {
+  const { settings } = useSettings();
   const [bugs, setBugs] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -92,6 +94,7 @@ function BugsPage() {
       <div className="toolbar">
         <input
           type="search"
+          aria-label="Search bugs by title or description"
           placeholder="Search title or description..."
           value={search}
           onChange={(e) => {
@@ -100,6 +103,7 @@ function BugsPage() {
           }}
         />
         <select
+          aria-label="Filter bugs by status"
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value);
@@ -114,6 +118,7 @@ function BugsPage() {
           ))}
         </select>
         <select
+          aria-label="Filter bugs by severity"
           value={severityFilter}
           onChange={(e) => {
             setSeverityFilter(e.target.value);
@@ -186,7 +191,13 @@ function BugsPage() {
 
       <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={setPage} />
 
-      {showCreate && <BugFormModal onClose={() => setShowCreate(false)} onSubmit={handleCreate} />}
+      {showCreate && (
+        <BugFormModal
+          defaultSeverity={settings?.default_severity_for_new_bugs}
+          onClose={() => setShowCreate(false)}
+          onSubmit={handleCreate}
+        />
+      )}
       {showTrash && <BugTrashModal onClose={() => setShowTrash(false)} onRestored={load} />}
     </main>
   );

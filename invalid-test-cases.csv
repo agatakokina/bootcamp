@@ -1,0 +1,8 @@
+title,preconditions,steps,expected_result,severity,status,test_type
+,User is logged in,Click profile icon|Click Logout,User is redirected to login page,major,ready,smoke
+Bulk export produces a valid file,An export button exists,Click Export,,minor,draft,regression
+Session times out after inactivity,User is logged in,Wait 30 minutes|Refresh the page,User is logged out,extreme,ready,smoke
+Report page loads within budget,None,Open the reports page,Page loads in under 2 seconds,major,archived,regression
+New user gets a welcome email,A new account is created,Complete signup,A welcome email is sent,minor,draft,onboarding
+Row with truly empty steps cell,None,,Nothing should happen,minor,draft,smoke
+This one is actually fine,None,Open settings|Toggle dark mode,Theme switches to dark,trivial,passed,smoke

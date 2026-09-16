@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { stripLeadingNumber } from "../utils/text.js";
 
 const SEVERITIES = ["critical", "major", "minor", "trivial"];
@@ -18,10 +18,15 @@ function toFormState(testCase) {
 }
 
 function TestCaseFormModal({ testCase, onClose, onSubmit }) {
+  const modalRef = useRef(null);
   const [form, setForm] = useState(() => toFormState(testCase));
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const isEdit = Boolean(testCase);
+
+  useEffect(() => {
+    modalRef.current?.focus();
+  }, []);
 
   function update(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -60,8 +65,16 @@ function TestCaseFormModal({ testCase, onClose, onSubmit }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{isEdit ? "Edit Test Case" : "New Test Case"}</h2>
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="modal-title">{isEdit ? "Edit Test Case" : "New Test Case"}</h2>
         <form onSubmit={handleSubmit}>
           <label>
             Title *

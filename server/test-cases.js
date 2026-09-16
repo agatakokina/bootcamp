@@ -1,4 +1,7 @@
 import { Router } from "express";
+import multer from "multer";
+import { parse } from "csv-parse/sync";
+import { stringify } from "csv-stringify/sync";
 import db from "./db.js";
 
 const SEVERITIES = ["critical", "major", "minor", "trivial"];
@@ -6,7 +9,15 @@ const STATUSES = ["draft", "ready", "passed", "failed", "skipped"];
 const TEST_TYPES = ["smoke", "regression", "smoke-regression"];
 const SEVERITY_RANK = { critical: 0, major: 1, minor: 2, trivial: 3 };
 
+const IMPORT_REQUIRED_HEADERS = ["title", "severity", "steps"];
+const IMPORT_MAX_ROWS = 1000;
+
 const router = Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 function ok(res, data) {
   res.json({ success: true, data, error: null });
@@ -96,9 +107,124 @@ function validateTestCase(body, { partial = false } = {}) {
   return { errors, fields };
 }
 
-function handleListTestCases(req, res) {
-  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-  const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 20));
+const LEADING_NUMBER_RE = /^\s*\d+\s*[.):-]\s*/;
+
+function splitSteps(raw) {
+  if (typeof raw !== "string") return [];
+  const normalized = raw.replace(/\r\n/g, "\n");
+  const parts = normalized.includes("\n")
+    ? normalized.split("\n")
+    : normalized.includes("|")
+      ? normalized.split("|")
+      : [normalized];
+
+  return parts.map((s) => s.trim().replace(LEADING_NUMBER_RE, "").trim()).filter(Boolean);
+}
+
+function normalizeEnumCell(value) {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.toLowerCase() : undefined;
+}
+
+function mapImportRow(row) {
+  return {
+    title: row.title !== undefined ? row.title.trim() : undefined,
+    preconditions: row.preconditions !== undefined ? row.preconditions.trim() : undefined,
+    steps: splitSteps(row.steps),
+    expected_result: row.expected_result !== undefined ? row.expected_result.trim() : undefined,
+    severity: normalizeEnumCell(row.severity),
+    status: normalizeEnumCell(row.status),
+    test_type: normalizeEnumCell(row.test_type),
+  };
+}
+
+function handlePreviewImport(req, res) {
+  if (!req.file) return fail(res, 400, "No file uploaded.");
+
+  let records;
+  try {
+    records = parse(req.file.buffer.toString("utf-8"), {
+      columns: (header) => header.map((h) => h.trim().toLowerCase()),
+      skip_empty_lines: true,
+      trim: true,
+      bom: true,
+    });
+  } catch (err) {
+    return fail(res, 400, `Could not parse file: ${err.message}`);
+  }
+
+  if (records.length === 0) {
+    return fail(res, 400, "The file has no data rows.");
+  }
+
+  if (records.length > IMPORT_MAX_ROWS) {
+    return fail(res, 400, `CSV has too many rows (max ${IMPORT_MAX_ROWS}).`);
+  }
+
+  const headers = Object.keys(records[0]);
+  const missingHeaders = IMPORT_REQUIRED_HEADERS.filter((h) => !headers.includes(h));
+  if (missingHeaders.length > 0) {
+    return fail(res, 400, `CSV is missing required column(s): ${missingHeaders.join(", ")}.`);
+  }
+
+  const rows = records.map((record, index) => {
+    const raw = mapImportRow(record);
+    const { errors, fields } = validateTestCase(raw, { partial: false });
+    return {
+      row_number: index + 2,
+      errors,
+      raw,
+      fields: errors.length ? null : fields,
+    };
+  });
+
+  const validCount = rows.filter((r) => r.errors.length === 0).length;
+
+  ok(res, {
+    total_rows: rows.length,
+    valid_count: validCount,
+    invalid_count: rows.length - validCount,
+    rows,
+  });
+}
+
+function handleCommitImport(req, res) {
+  const rowsToCommit = req.body.rows;
+  if (!Array.isArray(rowsToCommit) || rowsToCommit.length === 0) {
+    return fail(res, 400, "No rows to import.");
+  }
+
+  const insert = db.prepare(`
+    INSERT INTO test_cases (title, preconditions, steps, expected_result, severity, status, test_type)
+    VALUES (@title, @preconditions, @steps, @expected_result, @severity, @status, @test_type)
+  `);
+
+  const skipped = [];
+  let importedCount = 0;
+
+  const commit = db.transaction((rows) => {
+    rows.forEach((row, index) => {
+      const { errors, fields } = validateTestCase(row, { partial: false });
+      if (errors.length) {
+        skipped.push({ index, errors });
+        return;
+      }
+      insert.run(fields);
+      importedCount += 1;
+    });
+  });
+
+  commit(rowsToCommit);
+
+  ok(res, {
+    imported_count: importedCount,
+    skipped_count: skipped.length,
+    skipped,
+  });
+}
+
+function buildListQuery(req) {
   const search = (req.query.search || "").trim();
   const status = req.query.status;
   const showDeleted = req.query.deleted === "true";
@@ -115,7 +241,7 @@ function handleListTestCases(req, res) {
 
   if (status) {
     if (!STATUSES.includes(status)) {
-      return fail(res, 400, `Status must be one of: ${STATUSES.join(", ")}.`);
+      return { error: `Status must be one of: ${STATUSES.join(", ")}.` };
     }
     where.push("status = @status");
     params.status = status;
@@ -127,6 +253,17 @@ function handleListTestCases(req, res) {
     sortBy === "severity"
       ? `ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'major' THEN 1 WHEN 'minor' THEN 2 WHEN 'trivial' THEN 3 END ${sortDir}`
       : `ORDER BY updated_at ${sortDir}`;
+
+  return { whereClause, params, orderClause };
+}
+
+function handleListTestCases(req, res) {
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize, 10) || 20));
+
+  const query = buildListQuery(req);
+  if (query.error) return fail(res, 400, query.error);
+  const { whereClause, params, orderClause } = query;
 
   const total = db.prepare(`SELECT COUNT(*) AS count FROM test_cases ${whereClause}`).get(params).count;
 
@@ -140,6 +277,35 @@ function handleListTestCases(req, res) {
     page,
     pageSize,
   });
+}
+
+const EXPORT_COLUMNS = ["title", "preconditions", "steps", "expected_result", "severity", "status", "test_type"];
+
+function handleExportTestCases(req, res) {
+  const query = buildListQuery(req);
+  if (query.error) return fail(res, 400, query.error);
+  const { whereClause, params, orderClause } = query;
+
+  const rows = db.prepare(`SELECT * FROM test_cases ${whereClause} ${orderClause}`).all(params);
+
+  const records = rows.map((row) => ({
+    title: row.title,
+    preconditions: row.preconditions,
+    steps: JSON.parse(row.steps).join("\n"),
+    expected_result: row.expected_result,
+    severity: row.severity,
+    status: row.status,
+    test_type: row.test_type,
+  }));
+
+  const csv = stringify(records, { header: true, columns: EXPORT_COLUMNS });
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const filename = `test-cases-export-${timestamp}.csv`;
+
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  res.send("\uFEFF" + csv);
 }
 
 function handleGetTestCase(req, res) {
@@ -210,6 +376,9 @@ function handleRestoreTestCase(req, res) {
 }
 
 router.get("/", handleListTestCases);
+router.get("/export", handleExportTestCases);
+router.post("/import/preview", upload.single("file"), handlePreviewImport);
+router.post("/import/commit", handleCommitImport);
 router.get("/:id", handleGetTestCase);
 router.post("/", handleCreateTestCase);
 router.put("/:id", handleUpdateTestCase);

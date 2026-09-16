@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import SeverityBadge from "./SeverityBadge.jsx";
 import TestTypeBadge from "./TestTypeBadge.jsx";
 import { stripLeadingNumber } from "../utils/text.js";
@@ -7,10 +8,24 @@ function capitalize(word) {
 }
 
 function TestCaseDetailsModal({ testCase, onClose }) {
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    modalRef.current?.focus();
+  }, []);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{testCase.title}</h2>
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="modal-title">{testCase.title}</h2>
 
         <dl className="details-grid">
           <dt>Severity</dt>

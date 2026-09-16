@@ -104,6 +104,16 @@ function TestSuiteDetailPage() {
     e.preventDefault();
   }
 
+  async function persistReorder(updated) {
+    setCases(updated);
+    try {
+      await reorderSuiteCases(id, updated.map((c) => c.id));
+    } catch (err) {
+      setError(err.message);
+      load();
+    }
+  }
+
   async function handleDrop(index) {
     if (draggedIndex === null || draggedIndex === index) {
       setDraggedIndex(null);
@@ -112,15 +122,18 @@ function TestSuiteDetailPage() {
     const updated = [...cases];
     const [moved] = updated.splice(draggedIndex, 1);
     updated.splice(index, 0, moved);
-    setCases(updated);
     setDraggedIndex(null);
+    await persistReorder(updated);
+  }
 
-    try {
-      await reorderSuiteCases(id, updated.map((c) => c.id));
-    } catch (err) {
-      setError(err.message);
-      load();
-    }
+  // Keyboard-operable alternative to the drag handle above, which native
+  // HTML5 drag-and-drop makes mouse-only.
+  async function handleMove(index, direction) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= cases.length) return;
+    const updated = [...cases];
+    [updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]];
+    await persistReorder(updated);
   }
 
   if (loading) return <main className="page">Loading...</main>;
@@ -138,7 +151,7 @@ function TestSuiteDetailPage() {
       <div className="page-header">
         <h1>{suite.name}</h1>
         <div className="page-header-actions">
-          <select value={suite.status} onChange={handleStatusChange}>
+          <select aria-label="Suite status" value={suite.status} onChange={handleStatusChange}>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -189,7 +202,9 @@ function TestSuiteDetailPage() {
                 onDrop={() => handleDrop(index)}
                 className="draggable-row"
               >
-                <td className="drag-handle">⠿</td>
+                <td className="drag-handle" aria-hidden="true">
+                  ⠿
+                </td>
                 <td>{tc.title}</td>
                 <td>
                   <SeverityBadge severity={tc.severity} />
@@ -198,7 +213,25 @@ function TestSuiteDetailPage() {
                 <td>
                   <TestTypeBadge testType={tc.test_type} />
                 </td>
-                <td>
+                <td className="row-actions-cell">
+                  <button
+                    type="button"
+                    className="reorder-button"
+                    onClick={() => handleMove(index, -1)}
+                    disabled={index === 0}
+                    aria-label={`Move ${tc.title} up`}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="reorder-button"
+                    onClick={() => handleMove(index, 1)}
+                    disabled={index === cases.length - 1}
+                    aria-label={`Move ${tc.title} down`}
+                  >
+                    ↓
+                  </button>
                   <button className="link-button danger-text" onClick={() => setRemoveTarget(tc)}>
                     Remove
                   </button>
@@ -210,7 +243,7 @@ function TestSuiteDetailPage() {
       </table>
 
       <div className="add-case-row">
-        <select value={selectedCaseId} onChange={(e) => setSelectedCaseId(e.target.value)}>
+        <select aria-label="Add a test case to this suite" value={selectedCaseId} onChange={(e) => setSelectedCaseId(e.target.value)}>
           <option value="">Add a test case...</option>
           {availableCases.map((tc) => (
             <option key={tc.id} value={tc.id}>

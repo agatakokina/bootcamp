@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { createTestCase, deleteTestCase, fetchTestCases, updateTestCase } from "../api/test-cases.js";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { createTestCase, deleteTestCase, exportTestCases, fetchTestCases, updateTestCase } from "../api/test-cases.js";
 import SeverityBadge from "../components/SeverityBadge.jsx";
 import TestTypeBadge from "../components/TestTypeBadge.jsx";
 import Pagination from "../components/Pagination.jsx";
@@ -27,6 +28,8 @@ function formatDate(iso) {
 }
 
 function TestCasesPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -39,6 +42,7 @@ function TestCasesPage() {
   const [modalMode, setModalMode] = useState(null);
   const [activeTestCase, setActiveTestCase] = useState(null);
   const [showTrash, setShowTrash] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -55,6 +59,14 @@ function TestCasesPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (location.state?.openTestCase) {
+      setActiveTestCase(location.state.openTestCase);
+      setModalMode("details");
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   function toggleSort(column) {
     if (sortBy === column) {
@@ -92,6 +104,26 @@ function TestCasesPage() {
     load();
   }
 
+  async function handleExport() {
+    setError(null);
+    setExporting(true);
+    try {
+      const { blob, filename } = await exportTestCases({ search, status: statusFilter, sortBy, sortDir });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   function openDetails(tc) {
     setActiveTestCase(tc);
     setModalMode("details");
@@ -120,6 +152,12 @@ function TestCasesPage() {
           <button type="button" className="secondary-button" onClick={() => setShowTrash(true)}>
             View Trash
           </button>
+          <Link to="/test-cases/import" className="secondary-button-link">
+            Import CSV
+          </Link>
+          <button type="button" className="secondary-button" onClick={handleExport} disabled={exporting}>
+            {exporting ? "Exporting..." : "Download CSV"}
+          </button>
           <button
             onClick={() => {
               setActiveTestCase(null);
@@ -134,6 +172,7 @@ function TestCasesPage() {
       <div className="toolbar">
         <input
           type="search"
+          aria-label="Search test cases by title"
           placeholder="Search by title..."
           value={search}
           onChange={(e) => {
@@ -142,6 +181,7 @@ function TestCasesPage() {
           }}
         />
         <select
+          aria-label="Filter test cases by status"
           value={statusFilter}
           onChange={(e) => {
             setStatusFilter(e.target.value);
@@ -189,8 +229,12 @@ function TestCasesPage() {
             </tr>
           ) : (
             items.map((tc) => (
-              <tr key={tc.id} className="clickable-row" onClick={() => openDetails(tc)}>
-                <td>{tc.title}</td>
+              <tr key={tc.id}>
+                <td>
+                  <button type="button" className="row-title-button" onClick={() => openDetails(tc)}>
+                    {tc.title}
+                  </button>
+                </td>
                 <td>
                   <SeverityBadge severity={tc.severity} />
                 </td>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function DeleteConfirmModal({
   title = "Confirm Delete",
@@ -11,8 +11,15 @@ function DeleteConfirmModal({
   onClose,
   onConfirm,
 }) {
+  // Focus lands on Cancel, not the destructive action, so a stray Enter
+  // keypress on open can't trigger the delete.
+  const cancelRef = useRef(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    cancelRef.current?.focus();
+  }, []);
 
   async function handleConfirm() {
     setDeleting(true);
@@ -27,8 +34,14 @@ function DeleteConfirmModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal modal-small" onClick={(e) => e.stopPropagation()}>
-        <h2>{title}</h2>
+      <div
+        className="modal modal-small"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="modal-title">{title}</h2>
         <p>
           Are you sure you want to {actionVerb} <strong>{label}</strong>?
           {irreversible ? " This action cannot be undone." : ""}
@@ -38,7 +51,7 @@ function DeleteConfirmModal({
         {error && <p className="form-error">{error}</p>}
 
         <div className="modal-actions">
-          <button type="button" onClick={onClose} disabled={deleting}>
+          <button type="button" ref={cancelRef} onClick={onClose} disabled={deleting}>
             Cancel
           </button>
           <button type="button" className="danger-button" onClick={handleConfirm} disabled={deleting}>

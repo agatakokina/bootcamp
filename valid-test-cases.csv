@@ -1,0 +1,9 @@
+title,preconditions,steps,expected_result,severity,status,test_type
+Successful checkout with saved card,User is logged in and has a saved card,"Go to checkout
+Select saved card
+Click Pay Now",Order is placed and confirmation is shown,major,ready,smoke
+Search returns no results gracefully,None,Enter a nonsense query|Submit the search,"A friendly ""no results"" message is shown",minor,draft,regression
+Password field masks input,User is on the signup page,Click the password field|Type a password,Characters appear as dots not plain text,trivial,passed,smoke-regression
+Café order with special characters ☕,Menu is loaded,"Search for ""café latte""
+Add to cart",Item appears in cart with correct name,minor,ready,regression
+Delete confirmation cannot be bypassed,A record exists,Click delete|Press Escape on the confirmation dialog,The record is NOT deleted,critical,failed,regression

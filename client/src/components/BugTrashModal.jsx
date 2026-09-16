@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchDeletedBugs, restoreBug } from "../api/bugs.js";
 import SeverityBadge from "./SeverityBadge.jsx";
 
@@ -13,6 +13,7 @@ function formatDate(iso) {
 }
 
 function BugTrashModal({ onClose, onRestored }) {
+  const modalRef = useRef(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,6 +32,10 @@ function BugTrashModal({ onClose, onRestored }) {
     load();
   }, []);
 
+  useEffect(() => {
+    modalRef.current?.focus();
+  }, []);
+
   async function handleRestore(id) {
     setRestoringId(id);
     setError(null);
@@ -47,8 +52,16 @@ function BugTrashModal({ onClose, onRestored }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Deleted Bugs</h2>
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="modal-title">Deleted Bugs</h2>
 
         {error && <p className="form-error">{error}</p>}
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import TestCasesPage from "./pages/TestCasesPage.jsx";
+import TestCasesImportPage from "./pages/TestCasesImportPage.jsx";
 import TestSuitesPage from "./pages/TestSuitesPage.jsx";
 import TestSuiteDetailPage from "./pages/TestSuiteDetailPage.jsx";
 import BugsPage from "./pages/BugsPage.jsx";
@@ -10,6 +11,9 @@ import TestRunDetailPage from "./pages/TestRunDetailPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
 import ReportDetailPage from "./pages/ReportDetailPage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
+import KeyboardShortcuts from "./components/KeyboardShortcuts.jsx";
+import NavBar from "./components/NavBar.jsx";
 
 function Home() {
   const [status, setStatus] = useState("checking...");
@@ -43,25 +47,34 @@ function Home() {
       <p>
         <Link to="/reports">Go to Reports →</Link>
       </p>
+      <p>
+        <Link to="/settings">Go to Settings →</Link>
+      </p>
     </main>
   );
 }
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/test-cases" element={<TestCasesPage />} />
-      <Route path="/test-suites" element={<TestSuitesPage />} />
-      <Route path="/test-suites/:id" element={<TestSuiteDetailPage />} />
-      <Route path="/bugs" element={<BugsPage />} />
-      <Route path="/bugs/:id" element={<BugDetailPage />} />
-      <Route path="/test-runs" element={<TestRunsPage />} />
-      <Route path="/test-runs/:id" element={<TestRunDetailPage />} />
-      <Route path="/reports" element={<ReportsPage />} />
-      <Route path="/reports/:id" element={<ReportDetailPage />} />
-    </Routes>
+    <>
+      <KeyboardShortcuts />
+      <NavBar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/test-cases" element={<TestCasesPage />} />
+        <Route path="/test-cases/import" element={<TestCasesImportPage />} />
+        <Route path="/test-suites" element={<TestSuitesPage />} />
+        <Route path="/test-suites/:id" element={<TestSuiteDetailPage />} />
+        <Route path="/bugs" element={<BugsPage />} />
+        <Route path="/bugs/:id" element={<BugDetailPage />} />
+        <Route path="/test-runs" element={<TestRunsPage />} />
+        <Route path="/test-runs/:id" element={<TestRunDetailPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/reports/:id" element={<ReportDetailPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Routes>
+    </>
   );
 }
 
