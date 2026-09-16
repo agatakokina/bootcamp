@@ -129,6 +129,9 @@ const testCaseColumns = db.prepare("PRAGMA table_info(test_cases)").all().map((c
 if (!testCaseColumns.includes("deleted_at")) {
   db.exec("ALTER TABLE test_cases ADD COLUMN deleted_at TEXT");
 }
+if (!testCaseColumns.includes("flaky_alert_sent_at")) {
+  db.exec("ALTER TABLE test_cases ADD COLUMN flaky_alert_sent_at TEXT");
+}
 
 const seedCount = db.prepare("SELECT COUNT(*) AS count FROM test_cases").get().count;
 

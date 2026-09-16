@@ -10,6 +10,7 @@ import testRunsRouter from "./test-runs.js";
 import dashboardRouter from "./routes/dashboard.js";
 import reportsRouter from "./reports.js";
 import settingsRouter from "./settings.js";
+import flakyTestsRouter from "./flaky-tests.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -35,6 +36,7 @@ app.use("/api/test-runs", testRunsRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/settings", settingsRouter);
+app.use("/api/flaky-tests", flakyTestsRouter);
 
 // Serve the built client (npm run build -w client) if it exists, so a single
 // process can serve both the API and the frontend in production. In local

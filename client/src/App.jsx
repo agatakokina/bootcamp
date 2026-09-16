@@ -8,6 +8,7 @@ import BugsPage from "./pages/BugsPage.jsx";
 import BugDetailPage from "./pages/BugDetailPage.jsx";
 import TestRunsPage from "./pages/TestRunsPage.jsx";
 import TestRunDetailPage from "./pages/TestRunDetailPage.jsx";
+import FlakyTestTrackerPage from "./pages/FlakyTestTrackerPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
 import ReportDetailPage from "./pages/ReportDetailPage.jsx";
@@ -45,6 +46,9 @@ function Home() {
         <Link to="/test-runs">Go to Test Runs →</Link>
       </p>
       <p>
+        <Link to="/flaky-tests">Go to Flaky Test Tracker →</Link>
+      </p>
+      <p>
         <Link to="/reports">Go to Reports →</Link>
       </p>
       <p>
@@ -70,6 +74,7 @@ function App() {
         <Route path="/bugs/:id" element={<BugDetailPage />} />
         <Route path="/test-runs" element={<TestRunsPage />} />
         <Route path="/test-runs/:id" element={<TestRunDetailPage />} />
+        <Route path="/flaky-tests" element={<FlakyTestTrackerPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/:id" element={<ReportDetailPage />} />
         <Route path="/settings" element={<SettingsPage />} />

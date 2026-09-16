@@ -26,6 +26,13 @@ React + Vite frontend (`client/`) and an Express backend (`server/`), managed as
 - **Severity** — Critical / Major / Minor / Trivial.
 - **Status** — open / in-progress / resolved / closed / reopened.
 
+## Flaky Test Report Fields
+- **Test Case** — title of the flaky test being investigated.
+- **Flakiness Score** — the percentage score from the Flaky Test Tracker (`/api/flaky-tests`).
+- **Hypotheses** — ranked list of root-cause hypotheses, most likely first, each stating its supporting evidence (recurring failure notes, corroborating code, or "unconfirmed" if neither exists).
+- **Recommended Next Step** — one concrete action to take, not "investigate further."
+- **Suggested Severity** — Critical / Major / Minor / Trivial.
+
 ## API Response Shape
 Every endpoint returns:
 ```json

@@ -1,8 +1,16 @@
 import { Router } from "express";
 import db from "./db.js";
+import { getFlakinessForTestCase } from "./flakiness.js";
 
 const RESULTS = ["pending", "passed", "failed", "skipped"];
 const SETTABLE_RESULTS = ["passed", "failed", "skipped"];
+
+// A test needs to flip results this often before we bother the team about it.
+const FLAKY_ALERT_THRESHOLD = 0.3;
+// Once alerted, don't alert again for the same test case within this window,
+// so a persistently flaky test pings Discord occasionally rather than on
+// every single run.
+const FLAKY_ALERT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
 const router = Router();
 
@@ -104,6 +112,51 @@ async function postDiscordFailureAlert({ caseTitle, notes, runId }) {
   }
 
   return true;
+}
+
+async function postDiscordFlakyAlert({ caseTitle, flakiness_score, fail_rate, total_runs }) {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) {
+    console.warn("DISCORD_WEBHOOK_URL is not set; skipping flaky test alert.");
+    return false;
+  }
+
+  const baseUrl = process.env.APP_BASE_URL || "http://localhost:5173";
+  const trackerLink = `${baseUrl}/flaky-tests`;
+
+  const content = [
+    `🟡 Flaky test detected: **${caseTitle}**`,
+    `Flakiness score ${Math.round(flakiness_score * 100)}% — failed ${Math.round(fail_rate * 100)}% of its last ${total_runs} runs, alternating rather than consistently failing.`,
+    `Tracker: ${trackerLink}`,
+  ].join("\n");
+
+  const res = await fetch(webhookUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Discord webhook responded with ${res.status}`);
+  }
+
+  return true;
+}
+
+async function maybeSendFlakyAlert(testCaseId) {
+  const flakiness = getFlakinessForTestCase(db, testCaseId);
+  if (!flakiness || flakiness.flakiness_score < FLAKY_ALERT_THRESHOLD) return;
+
+  const testCase = db.prepare("SELECT title, flaky_alert_sent_at FROM test_cases WHERE id = ?").get(testCaseId);
+  if (!testCase) return;
+
+  const lastAlertAt = testCase.flaky_alert_sent_at ? new Date(testCase.flaky_alert_sent_at).getTime() : 0;
+  if (Date.now() - lastAlertAt < FLAKY_ALERT_COOLDOWN_MS) return;
+
+  const sent = await postDiscordFlakyAlert({ caseTitle: testCase.title, ...flakiness });
+  if (sent) {
+    db.prepare("UPDATE test_cases SET flaky_alert_sent_at = ? WHERE id = ?").run(new Date().toISOString(), testCaseId);
+  }
 }
 
 function handleListRuns(req, res) {
@@ -221,6 +274,14 @@ async function handleUpdateRunResult(req, res) {
     }
 
     recomputeRunCounts(req.params.id);
+
+    if (newResult === "passed" || newResult === "failed") {
+      try {
+        await maybeSendFlakyAlert(req.params.testCaseId);
+      } catch (webhookErr) {
+        console.error("Failed to send Discord flaky test alert:", webhookErr);
+      }
+    }
 
     ok(res, serializeRun(getRunOr404(req.params.id), true));
   } catch (err) {
