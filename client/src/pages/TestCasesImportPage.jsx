@@ -132,9 +132,7 @@ function TestCasesImportPage() {
                   <td>{row.raw.test_type || "—"}</td>
                   <td>
                     {row.errors.length === 0 ? (
-                      <span className="badge" style={{ backgroundColor: "#dcfce7", color: "#166534" }}>
-                        Valid
-                      </span>
+                      <span className="badge badge-tone-green">Valid</span>
                     ) : (
                       <span className="form-error">{row.errors.join(" ")}</span>
                     )}

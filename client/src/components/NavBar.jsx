@@ -33,14 +33,15 @@ function NavBar() {
           className="app-nav-toggle"
           aria-label="Toggle navigation menu"
           aria-expanded={menuOpen}
+          aria-controls="primary-navigation"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          <span />
-          <span />
-          <span />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
         </button>
 
-        <nav className={`app-nav-links${menuOpen ? " open" : ""}`}>
+        <nav id="primary-navigation" className={`app-nav-links${menuOpen ? " open" : ""}`}>
           {NAV_LINKS.map((link) => (
             <NavLink
               key={link.to}

@@ -1,18 +1,14 @@
-const COLORS = {
-  draft: { bg: "#e5e7eb", fg: "#374151" },
-  ready: { bg: "#dbeafe", fg: "#1d4ed8" },
-  "in-progress": { bg: "#fef9c3", fg: "#854d0e" },
-  passed: { bg: "#dcfce7", fg: "#166534" },
-  failed: { bg: "#fee2e2", fg: "#b91c1c" },
+const TONES = {
+  draft: "gray",
+  ready: "blue",
+  "in-progress": "yellow",
+  passed: "green",
+  failed: "red",
 };
 
 function SuiteStatusBadge({ status }) {
-  const colors = COLORS[status] || { bg: "#e5e7eb", fg: "#374151" };
-  return (
-    <span className="badge" style={{ backgroundColor: colors.bg, color: colors.fg }}>
-      {status}
-    </span>
-  );
+  const tone = TONES[status] || "gray";
+  return <span className={`badge badge-tone-${tone}`}>{status}</span>;
 }
 
 export default SuiteStatusBadge;
