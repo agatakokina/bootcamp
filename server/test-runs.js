@@ -263,11 +263,13 @@ async function handleUpdateRunResult(req, res) {
     if (newResult === "failed") {
       const testCase = db.prepare("SELECT title FROM test_cases WHERE id = ?").get(req.params.testCaseId);
       try {
-        await postDiscordFailureAlert({ caseTitle: testCase.title, notes, runId: req.params.id });
-        db.prepare("UPDATE test_run_results SET discord_alert_sent_at = ? WHERE id = ?").run(
-          new Date().toISOString(),
-          resultRow.id
-        );
+        const sent = await postDiscordFailureAlert({ caseTitle: testCase.title, notes, runId: req.params.id });
+        if (sent) {
+          db.prepare("UPDATE test_run_results SET discord_alert_sent_at = ? WHERE id = ?").run(
+            new Date().toISOString(),
+            resultRow.id
+          );
+        }
       } catch (webhookErr) {
         console.error("Failed to send Discord failure alert:", webhookErr);
       }
