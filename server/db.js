@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { FLAKY_TITLE_PREFIX, seedFlakyTestRuns } from "./seed-flaky-data.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const db = new Database(path.join(__dirname, "data.sqlite"));
@@ -497,6 +498,19 @@ if (preferencesCount === 0) {
     INSERT INTO user_preferences (theme, default_severity_for_new_bugs, default_page_size, timezone, auto_generate_report_after_run)
     VALUES ('system', 'minor', 20, NULL, 1)
   `).run();
+}
+
+// Runs on every boot where it isn't already present, not just once ever —
+// Render's free tier has no persistent disk, so the SQLite file (and this
+// seed data with it) is wiped on every redeploy/restart. Re-seeding here
+// keeps the Flaky Test Tracker demo populated in production the same way a
+// local dev environment already is, instead of only ever working locally.
+const flakySeedCount = db
+  .prepare("SELECT COUNT(*) AS count FROM test_cases WHERE title LIKE ?")
+  .get(`${FLAKY_TITLE_PREFIX}%`).count;
+
+if (flakySeedCount === 0) {
+  seedFlakyTestRuns(db);
 }
 
 export default db;
