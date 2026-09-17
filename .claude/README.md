@@ -142,6 +142,7 @@ Wired into `.claude/settings.json`, run automatically — never invoked by name.
 | `protect-env.sh` | `PreToolUse` | `Write\|Edit` | **Blocks** (exit 2) any Write/Edit whose target path is `.env`, with a stderr `SECURITY ERROR` message. Everything else passes through untouched. |
 | `check-response-shape.sh` | `PostToolUse` | `Write\|Edit` | **Warns only** (never blocks). After a route-handler file directly under `server/` is written, scans every `res.json()`/`res.send()` call and flags (via `systemMessage`) any that don't appear to return `CLAUDE.md`'s `{success, data, error}` envelope. Skips `server/index.js` and `server/db.js` since they aren't route handlers. |
 | `check-severity-enum.sh` | `PostToolUse` | `Write\|Edit` | **Warns only**. Scans any edited `.js`/`.jsx`/`.ts`/`.tsx` file for lines mentioning "severity" that also contain a non-severity word like `high`/`medium`/`low` (valid bug *priority* values, but not valid *severity* values per `CLAUDE.md`), and flags them as a possible mix-up. |
+| `check-flaky-test-results.sh` | `PostToolUse` | `Bash` | **Warns only**. After a Bash command that plausibly touched `test_run_results` (a seed script, a direct `sqlite3` query, a curl call against the test-runs API), computes flakiness for every test case straight from the database (same formula as `server/flakiness.js`: transition rate between consecutive passed/failed runs) and lists any at or above the 30% threshold via `systemMessage`. This is a Claude Code-side detector distinct from the app's own Discord alert in `server/test-runs.js` — that one fires for real end users hitting the deployed app; this one catches flakiness surfaced during a dev/ops session that used Claude Code's own Bash tool. |
 
 **Worked example — try it yourself:**
 ```
@@ -153,6 +154,11 @@ Wired into `.claude/settings.json`, run automatically — never invoked by name.
 > In server/bugs.js, add a debug route that does res.send("ok").
 ```
 Once the edit is written, `check-response-shape.sh` fires afterward and posts a warning that the new `res.send("ok")` doesn't match the required `{success, data, error}` shape — a nudge, not a block, so Claude (or you) can fix it before moving on.
+
+```
+> Run: sqlite3 server/data.sqlite "SELECT COUNT(*) FROM test_run_results;"
+```
+`check-flaky-test-results.sh` fires afterward, recognizes the command touched `test_run_results`, and lists every currently-flaky test case straight from the live data — no app restart or manual `/flaky-tests` visit needed to notice it.
 
 ## Quick self-check for a grader
 
