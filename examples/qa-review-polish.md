@@ -1,12 +1,10 @@
-# Worked Example: QA-Style App-Wide Polish Review
+# App-wide QA polish pass across every page
 
-Demonstrates finding and fixing real cross-page design-consistency defects, the same kind of work the `qa-review` skill and `qa-reviewer` subagent are built to surface — verified in a live browser, not just read from source.
-
-## Prompt
+## Prompt I typed
 
 > Let's move to Step 4: App-Wide Polish. Please check all pages (Dashboard, Settings, Bug Tracker, Flaky Test Tracker, NavBar) to make sure they share a cohesive theme, color palette, and visual design. Fix any inconsistencies.
 
-## Did
+## What Claude did
 
 1. Read every badge component (`SeverityBadge`, `TestTypeBadge`, `ResultBadge`, `RunStatusBadge`, `BugStatusBadge`, `BugPriorityBadge`, `SuiteStatusBadge`) and found each one hardcoded light-mode-only hex colors (e.g. `background: "#fee2e2"`), completely bypassing the app's existing dark/light CSS-variable theme system.
 2. Confirmed the problem visually: switched the running app to dark mode and screenshotted the Bugs and Flaky Test Tracker pages — the badges rendered as bright pastel light-mode chips clashing against the dark surface.
@@ -18,7 +16,12 @@ Demonstrates finding and fixing real cross-page design-consistency defects, the 
 
 ## Result
 
-- New tone-based color system in `client/src/index.css`, replacing every hardcoded status/severity/result color in the app.
-- All 7 badge components refactored from inline `style={{...}}` to `className="badge badge-tone-X"`.
-- `.form-error`, `.form-warning`, `.form-success`, and related hover/link colors now theme correctly instead of staying fixed light-mode colors.
-- Confirmed via live screenshots across Bugs, Flaky Test Tracker, Test Cases, Test Runs, and Settings, in both themes — no visual regressions, full cross-page cohesion restored.
+Files changed:
+- `client/src/index.css` — new tone-based color system, replacing every hardcoded status/severity/result color in the app.
+- `client/src/components/SeverityBadge.jsx`, `TestTypeBadge.jsx`, `ResultBadge.jsx`, `RunStatusBadge.jsx`, `BugStatusBadge.jsx`, `BugPriorityBadge.jsx`, `SuiteStatusBadge.jsx` — refactored from inline `style={{...}}` to `className="badge badge-tone-X"`.
+
+Verified output (screenshot comparison, dark mode, Bugs page):
+- **Before:** severity/priority/status badges rendered as solid, near-white pastel chips (`#fee2e2`, `#dbeafe`, `#dcfce7`) that visually clashed against the dark page background.
+- **After:** same badges render as muted, tinted chips (e.g. red badge background `rgba(248,113,113,0.16)` with `#fca5a5` text) that read as part of the dark surface instead of a light-mode sticker pasted on top of it.
+
+Confirmed via live screenshots across Bugs, Flaky Test Tracker, Test Cases, Test Runs, and Settings, in both themes — no visual regressions, full cross-page cohesion restored.

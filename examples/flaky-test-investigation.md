@@ -1,12 +1,10 @@
-# Worked Example: Flaky Test Investigation
+# Investigating why a Flaky Test Tracker entry is flaky
 
-Demonstrates the `flaky-test-analysis` skill (and its paired `flaky-test-analyzer` subagent) investigating a real entry from the Flaky Test Tracker, using actual run history rather than a guess.
-
-## Prompt
+## Prompt I typed
 
 > Investigate why "[Flaky Seed] Notification badge count updates in real time" is flaky (the current #1 entry in the Flaky Test Tracker). Dev server is running at http://localhost:3001.
 
-## Did
+## What Claude did
 
 1. Loaded the `flaky-test-analysis` skill, which pulls real run history instead of speculating.
 2. Fetched `GET http://localhost:3001/api/flaky-tests` and located this test case's entry: 30 total runs, 18 passed / 11 failed / 1 skipped, flakiness score 0.61.
@@ -16,6 +14,8 @@ Demonstrates the `flaky-test-analysis` skill (and its paired `flaky-test-analyze
 6. Wrote the report using `CLAUDE.md`'s "Flaky Test Report Fields" exactly, refusing to present an unconfirmed guess as a confirmed root cause.
 
 ## Result
+
+Output printed directly in chat (no file written — this is a diagnostic report, not a generated artifact):
 
 ```
 ## Flaky Test Report
@@ -34,4 +34,4 @@ Demonstrates the `flaky-test-analysis` skill (and its paired `flaky-test-analyze
 **Suggested Severity:** Minor
 ```
 
-The takeaway: the skill correctly refused to fabricate a "confirmed" root cause for code that doesn't exist, instead of producing a plausible-sounding but false diagnosis.
+Takeaway: the skill correctly refused to fabricate a "confirmed" root cause for code that doesn't exist, instead of producing a plausible-sounding but false diagnosis.
