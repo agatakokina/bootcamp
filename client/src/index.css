@@ -236,8 +236,39 @@ a {
     gap: 0.75rem;
   }
 
+  /* A wrapped row of 1-4 buttons looks different on every page depending on
+     how many happen to fit per line, which reads as "no common pattern"
+     from one tab to the next. Stacking every action full-width, in every
+     header, on every page, is one predictable shape regardless of count. */
   .page-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .page-header-actions button,
+  .page-header-actions .secondary-button-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .add-case-row {
     flex-wrap: wrap;
+  }
+
+  /* Same reasoning as .page-header-actions: a search box plus 1-2 selects
+     with no wrapping overflows past the viewport at this width, which is
+     also why a <select>'s native picker looked like it opened in a
+     different place each time — the select itself was partly off-screen,
+     so the picker anchored whatever was actually reachable. Full-width
+     stacking keeps every filter reliably on-screen and in the same place. */
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar select {
+    width: 100%;
   }
 }
 
@@ -282,6 +313,11 @@ a {
 .page-header-actions .secondary-button-link {
   display: inline-flex;
   align-items: center;
+  /* Browsers give <button> border-box sizing by default but not <a> — since
+     this is a Link styled as a button, without this its padding+border add
+     to width: 100% instead of fitting inside it, rendering visibly wider
+     and misaligned next to the real <button> elements beside it. */
+  box-sizing: border-box;
   background: var(--bg-surface);
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
@@ -350,6 +386,7 @@ a {
 
 .toolbar input[type="search"] {
   flex: 1;
+  min-width: 0;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 6px;
@@ -485,6 +522,10 @@ a {
 .add-case-row select,
 .add-case-row input {
   flex: 1;
+  /* Flex items default to min-width: auto, which lets a <select> refuse to
+     shrink below its widest <option> text (e.g. a long test case title) —
+     overriding that is what actually lets flex: 1 shrink it to fit. */
+  min-width: 0;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: 6px;

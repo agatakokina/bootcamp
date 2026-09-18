@@ -70,6 +70,7 @@ function TrashModal({ onClose, onRestored }) {
         ) : items.length === 0 ? (
           <p>Nothing in the trash.</p>
         ) : (
+          <div className="table-scroll">
           <table className="table">
             <thead>
               <tr>
@@ -101,6 +102,7 @@ function TrashModal({ onClose, onRestored }) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
 
         <div className="modal-actions">

@@ -46,7 +46,9 @@ function TestSuitesPage() {
     <main className="page">
       <div className="page-header">
         <h1>Test Suites</h1>
-        <button onClick={() => setShowCreate(true)}>+ New Suite</button>
+        <div className="page-header-actions">
+          <button onClick={() => setShowCreate(true)}>+ New Suite</button>
+        </div>
       </div>
 
       <div className="toolbar">
