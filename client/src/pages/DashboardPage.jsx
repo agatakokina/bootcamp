@@ -170,6 +170,7 @@ function DashboardPage() {
             Click "New Run" on a <Link to="/test-suites">suite page</Link> to execute your first test.
           </EmptyStateCard>
         ) : (
+          <div className="table-scroll">
           <table className="table">
             <thead>
               <tr>
@@ -192,6 +193,7 @@ function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </section>
 

@@ -157,6 +157,7 @@ function FlakyTestTrackerPage() {
         </div>
       )}
 
+      <div className="table-scroll">
       <table className="table" aria-label="Top flaky tests ranked by flakiness score">
         <thead>
           <tr>
@@ -198,6 +199,7 @@ function FlakyTestTrackerPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       {generatedAt && <p className="page-footnote">Last computed {formatDate(generatedAt)}</p>}
     </main>

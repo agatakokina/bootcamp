@@ -226,6 +226,19 @@ a {
     border-bottom: none;
     border-left-color: #2563eb;
   }
+
+  /* Below this width, a title sitting next to 2-4 action buttons on one row
+     has too little space for either — the title wraps mid-word and the
+     buttons crowd together. Stacking gives each its own full-width row. */
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .page-header-actions {
+    flex-wrap: wrap;
+  }
 }
 
 .page-header {
@@ -350,13 +363,24 @@ a {
   font-size: 0.9rem;
 }
 
+/* On a narrow viewport, an unconstrained table squeezes its longest text
+   column (usually Title) into unreadable multi-line wrapping just to avoid
+   overflowing. min-width on the table plus overflow-x on this wrapper keeps
+   every column readable and lets the whole table scroll horizontally
+   instead — the wrapper (not the table itself) is what actually needs to
+   own the scrollbar, since a table can't scroll its own oversized box. */
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
 .table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   background: var(--bg-surface);
   border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .table th,

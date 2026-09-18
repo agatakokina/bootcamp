@@ -102,6 +102,7 @@ function ReportDetailPage() {
         </div>
       </div>
 
+      <div className="table-scroll">
       <table className="table">
         <thead>
           <tr>
@@ -132,6 +133,7 @@ function ReportDetailPage() {
           ))}
         </tbody>
       </table>
+      </div>
     </main>
   );
 }

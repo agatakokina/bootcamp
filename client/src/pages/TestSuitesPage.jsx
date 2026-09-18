@@ -62,6 +62,7 @@ function TestSuitesPage() {
 
       {error && <p className="form-error">{error}</p>}
 
+      <div className="table-scroll">
       <table className="table">
         <thead>
           <tr>
@@ -102,6 +103,7 @@ function TestSuitesPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       {showCreate && <SuiteFormModal onClose={() => setShowCreate(false)} onSubmit={handleCreate} />}
     </main>

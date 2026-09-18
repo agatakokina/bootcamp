@@ -136,6 +136,7 @@ function BugsPage() {
 
       {error && <p className="form-error">{error}</p>}
 
+      <div className="table-scroll">
       <table className="table">
         <thead>
           <tr>
@@ -188,6 +189,7 @@ function BugsPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={setPage} />
 

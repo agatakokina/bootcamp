@@ -114,6 +114,7 @@ function TestRunDetailPage() {
 
       {error && <p className="form-error">{error}</p>}
 
+      <div className="table-scroll">
       <table className="table">
         <thead>
           <tr>
@@ -180,6 +181,7 @@ function TestRunDetailPage() {
           ))}
         </tbody>
       </table>
+      </div>
     </main>
   );
 }

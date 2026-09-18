@@ -199,6 +199,7 @@ function TestCasesPage() {
 
       {error && <p className="form-error">{error}</p>}
 
+      <div className="table-scroll">
       <table className="table">
         <thead>
           <tr>
@@ -251,6 +252,7 @@ function TestCasesPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={setPage} />
 

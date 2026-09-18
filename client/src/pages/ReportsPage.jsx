@@ -42,6 +42,7 @@ function ReportsPage() {
 
       {error && <p className="form-error">{error}</p>}
 
+      <div className="table-scroll">
       <table className="table">
         <thead>
           <tr>
@@ -82,6 +83,7 @@ function ReportsPage() {
           )}
         </tbody>
       </table>
+      </div>
     </main>
   );
 }

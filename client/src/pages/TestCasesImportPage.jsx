@@ -76,6 +76,7 @@ function TestCasesImportPage() {
           </p>
 
           {commitResult.skipped_count > 0 && (
+            <div className="table-scroll">
             <table className="table">
               <thead>
                 <tr>
@@ -92,6 +93,7 @@ function TestCasesImportPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
 
           <p>
@@ -111,6 +113,7 @@ function TestCasesImportPage() {
 
           {commitError && <p className="form-error">{commitError}</p>}
 
+          <div className="table-scroll">
           <table className="table">
             <thead>
               <tr>
@@ -141,6 +144,7 @@ function TestCasesImportPage() {
               ))}
             </tbody>
           </table>
+          </div>
 
           <div className="modal-actions" style={{ marginTop: "1rem" }}>
             <button type="button" className="secondary-button" onClick={resetAll} disabled={committing}>

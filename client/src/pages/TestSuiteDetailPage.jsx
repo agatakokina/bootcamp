@@ -174,6 +174,7 @@ function TestSuiteDetailPage() {
 
       {error && <p className="form-error">{error}</p>}
 
+      <div className="table-scroll">
       <table className="table">
         <thead>
           <tr>
@@ -241,6 +242,7 @@ function TestSuiteDetailPage() {
           )}
         </tbody>
       </table>
+      </div>
 
       <div className="add-case-row">
         <select aria-label="Add a test case to this suite" value={selectedCaseId} onChange={(e) => setSelectedCaseId(e.target.value)}>
