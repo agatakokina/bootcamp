@@ -1,0 +1,9 @@
+{
+  "name": "bootcamp-qa-kit",
+  "description": "Claude Code plugin kit for QA/test-management workflows: bug reporting, test-case generation, QA review, and flaky-test investigation, backed by CLAUDE.md-enforced conventions and safety hooks.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Agata Kokina",
+    "email": "agata.kokina@testdevlab.com"
+  }
+}
