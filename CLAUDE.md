@@ -3,6 +3,9 @@
 ## Stack
 React + Vite frontend (`client/`) and an Express backend (`server/`), managed as an npm workspaces monorepo.
 
+## Design Aesthetic
+**Clean, Adaptive Dark Console.** Dark-first (with a matching light theme), minimal chrome, card-based metrics, a single blue accent color for primary actions, and muted/tinted status badges instead of loud corporate color-blocking.
+
 ## Severity Levels
 - **Critical** — the system is unusable or data is lost/corrupted; no workaround exists.
 - **Major** — a core feature is broken but the system is still usable via a workaround.
